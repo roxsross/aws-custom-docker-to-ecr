@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  MyKeyPair:
+    Type: String
+    Default: awsroxs
+  MySecurityGroup:
+    Type: String
+    Default: sg-0ae1443dda2c5a3ec
+  MySubnet:
+    Type: String
+    Default: subnet-06cb9704b11863a80
+  MyVpcId: 
+    Type: String
+    Default: vpc-04504ebf342619b87    
+  MyInstanceType: 
+    Type: String
+    Default: t3.micro
+  MyAmiId: 
+    Type: String
+    Default: ami-02b972fec07f1e659 
+  MyAvailabilityZone:
+    Type: String
+    Default: us-east-1b
+Resources:
+  MyDemoInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref MyInstanceType
+      ImageId: !Ref MyAmiId
+      AvailabilityZone: !Ref MyAvailabilityZone
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          AssociatePublicIpAddress: true
+          DeleteOnTermination: true
+          SubnetId: !Ref MySubnet
+          GroupSet:
+            - !Ref MySecurityGroup
+      KeyName: !Ref MyKeyPair #
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          sudo yum update -y
+          sudo yum install docker git -y
+          sudo service docker start
+          sudo usermod -a -G docker ec2-user 
+          DC_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/docker/compose/releases/latest | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
+          sudo curl -L "https://github.com/docker/compose/releases/download/$DC_VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          sudo service docker restart        
+      Tags:
+        - Key: Name
+          Value: AWSEc2Shell
+        - Key: Owner
+          Value: RoxsRoss  
+Outputs:
+  DemoInstance:
+    Value: !GetAtt 'MyDemoInstance.PublicIp'
