@@ -1,6 +1,7 @@
 #!/bin/bash
 sudo yum update -y
 sudo yum install docker git -y
+sudo service docker enable
 sudo service docker start
 sudo usermod -a -G docker ec2-user 
 DC_VERSION=$(curl -L -s -H 'Accept: application/json' https://github.com/docker/compose/releases/latest | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
